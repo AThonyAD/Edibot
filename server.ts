@@ -117,42 +117,67 @@ if (countUser.count === 0) {
 // --- API ROUTES ---
 
 app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  const user = db.prepare('SELECT id, email, role, name FROM users WHERE email = ? AND password = ?').get(email, password);
-  if (user) {
-    res.json({ user });
-  } else {
-    res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
+  try {
+    const { email, password } = req.body;
+
+    // Zamezení DoS (TypeError při bindování objektů místo stringů)
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Neplatný formát dat' });
+    }
+
+    const user = db.prepare('SELECT id, email, role, name FROM users WHERE email = ? AND password = ?').get(email, password);
+    if (user) {
+      res.json({ user });
+    } else {
+      res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
   }
 });
 
 app.get('/api/media-titles', (req, res) => {
-  const { publisher_id } = req.query;
-  console.log("GET /api/media-titles requested for publisher_id:", publisher_id);
-  let query = `
-    SELECT mt.*, (SELECT COUNT(*) FROM topics t WHERE t.media_title_id = mt.id) as topic_count 
-    FROM media_titles mt
-  `;
-  const params: any[] = [];
-  if (publisher_id) {
-    query += ' WHERE mt.publisher_id = ?';
-    params.push(Number(publisher_id));
+  try {
+    const { publisher_id } = req.query;
+    console.log("GET /api/media-titles requested for publisher_id:", publisher_id);
+    let query = `
+      SELECT mt.*, (SELECT COUNT(*) FROM topics t WHERE t.media_title_id = mt.id) as topic_count
+      FROM media_titles mt
+    `;
+    const params: any[] = [];
+    if (publisher_id) {
+      query += ' WHERE mt.publisher_id = ?';
+      params.push(Number(publisher_id));
+    }
+    const titles = db.prepare(query).all(...params);
+    console.log(`Returning ${titles.length} titles`);
+    res.json(titles);
+  } catch (err) {
+    console.error("GET /api/media-titles error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
   }
-  const titles = db.prepare(query).all(...params);
-  console.log(`Returning ${titles.length} titles`);
-  res.json(titles);
 });
 
 app.post('/api/media-titles', (req, res) => {
-  const { publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type } = req.body;
-  console.log("POST /api/media-titles received:", { publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type });
-  if (!publisher_id || !name) {
-    console.warn("Missing publisher_id or name in request body");
-    return res.status(400).json({ error: 'Chybí ID vydavatele nebo název titulu' });
-  }
   try {
+    const { publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type } = req.body;
+    console.log("POST /api/media-titles received:", { publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type });
+    if (!publisher_id || !name || typeof name !== 'string') {
+      console.warn("Missing publisher_id or name in request body");
+      return res.status(400).json({ error: 'Chybí ID vydavatele nebo název titulu' });
+    }
     const stmt = db.prepare('INSERT INTO media_titles (publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    const info = stmt.run(Number(publisher_id), name, contact || '', default_price || 0, default_reach || 0, default_target_audience || '', default_collaboration_type || 'Klasická inzerce');
+    // Ensuring basic types to avoid parameter binding errors
+    const info = stmt.run(
+      Number(publisher_id),
+      name,
+      typeof contact === 'string' ? contact : '',
+      Number(default_price) || 0,
+      Number(default_reach) || 0,
+      typeof default_target_audience === 'string' ? default_target_audience : '',
+      typeof default_collaboration_type === 'string' ? default_collaboration_type : 'Klasická inzerce'
+    );
     console.log("Title added to DB, ID:", info.lastInsertRowid);
     res.json({ id: info.lastInsertRowid });
   } catch (err) {
@@ -162,15 +187,20 @@ app.post('/api/media-titles', (req, res) => {
 });
 
 app.delete('/api/media-titles/:id', (req, res) => {
-  db.prepare('DELETE FROM media_titles WHERE id = ?').run(req.params.id);
-  res.json({ success: true });
+  try {
+    db.prepare('DELETE FROM media_titles WHERE id = ?').run(Number(req.params.id));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/media-titles error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
 });
 
 app.put('/api/media-titles/:id', (req, res) => {
-  const { name, contact, default_price, default_reach, default_target_audience, default_collaboration_type } = req.body;
-  const titleId = req.params.id;
-
   try {
+    const { name, contact, default_price, default_reach, default_target_audience, default_collaboration_type } = req.body;
+    const titleId = Number(req.params.id);
+
     const transaction = db.transaction(() => {
       // Update the title itself
       const updateTitle = db.prepare(`
@@ -178,7 +208,15 @@ app.put('/api/media-titles/:id', (req, res) => {
         SET name = ?, contact = ?, default_price = ?, default_reach = ?, default_target_audience = ?, default_collaboration_type = ?
         WHERE id = ?
       `);
-      updateTitle.run(name, contact, default_price, default_reach, default_target_audience, default_collaboration_type, titleId);
+      updateTitle.run(
+        typeof name === 'string' ? name : null,
+        typeof contact === 'string' ? contact : null,
+        default_price !== undefined ? Number(default_price) : null,
+        default_reach !== undefined ? Number(default_reach) : null,
+        typeof default_target_audience === 'string' ? default_target_audience : null,
+        typeof default_collaboration_type === 'string' ? default_collaboration_type : null,
+        titleId
+      );
 
       // Propagate to all topics
       const updateTopics = db.prepare(`
@@ -186,7 +224,14 @@ app.put('/api/media-titles/:id', (req, res) => {
         SET contact = ?, price = ?, reach = ?, target_audience = ?, collaboration_type = ?
         WHERE media_title_id = ?
       `);
-      updateTopics.run(contact, default_price, default_reach, default_target_audience, default_collaboration_type, titleId);
+      updateTopics.run(
+        typeof contact === 'string' ? contact : null,
+        default_price !== undefined ? Number(default_price) : null,
+        default_reach !== undefined ? Number(default_reach) : null,
+        typeof default_target_audience === 'string' ? default_target_audience : null,
+        typeof default_collaboration_type === 'string' ? default_collaboration_type : null,
+        titleId
+      );
     });
 
     transaction();
@@ -198,24 +243,32 @@ app.put('/api/media-titles/:id', (req, res) => {
 });
 
 app.get('/api/topics', (req, res) => {
-  const { search, minPrice, maxPrice, format, collaboration_type, deadlineFrom, deadlineTo, media_title_id } = req.query;
-  let query = 'SELECT * FROM topics WHERE 1=1';
-  const params: any[] = [];
+  try {
+    const { search, minPrice, maxPrice, format, collaboration_type, deadlineFrom, deadlineTo, media_title_id } = req.query;
+    let query = 'SELECT * FROM topics WHERE 1=1';
+    const params: any[] = [];
 
-  if (search) {
-    const searchTerms = (search as string).split(/[,\s]+/).filter(Boolean);
-    if (searchTerms.length > 0) {
-      query += ' AND (';
-      const termConditions = searchTerms.map(() => '(title LIKE ? OR media_name LIKE ? OR description LIKE ? OR labels LIKE ?)');
-      query += termConditions.join(' OR ');
-      query += ')';
+    if (search && typeof search === 'string') {
+      // Limit length to avoid long regex evaluation
+      const safeSearch = search.slice(0, 200);
+      const searchTerms = safeSearch.split(/[,\s]+/).filter(Boolean);
       
-      searchTerms.forEach(term => {
-        const searchParam = `%${term}%`;
-        params.push(searchParam, searchParam, searchParam, searchParam);
-      });
+      // Limit number of search terms to prevent query expansion DoS
+      const maxTerms = 10;
+      const limitedSearchTerms = searchTerms.slice(0, maxTerms);
+
+      if (limitedSearchTerms.length > 0) {
+        query += ' AND (';
+        const termConditions = limitedSearchTerms.map(() => '(title LIKE ? OR media_name LIKE ? OR description LIKE ? OR labels LIKE ?)');
+        query += termConditions.join(' OR ');
+        query += ')';
+
+        limitedSearchTerms.forEach(term => {
+          const searchParam = `%${term}%`;
+          params.push(searchParam, searchParam, searchParam, searchParam);
+        });
+      }
     }
-  }
   if (minPrice) {
     query += ' AND price >= ?';
     params.push(Number(minPrice));
@@ -252,46 +305,112 @@ app.get('/api/topics', (req, res) => {
     labels: t.labels ? JSON.parse(t.labels) : []
   }));
   res.json(topics);
+  } catch (err) {
+    console.error("GET /api/topics error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
 });
 
 app.get('/api/publishers/:id/topics', (req, res) => {
-  const topics = db.prepare('SELECT * FROM topics WHERE publisher_id = ? ORDER BY deadline_date ASC').all(req.params.id).map((t: any) => ({
-    ...t,
-    labels: t.labels ? JSON.parse(t.labels) : []
-  }));
-  res.json(topics);
+  try {
+    const topics = db.prepare('SELECT * FROM topics WHERE publisher_id = ? ORDER BY deadline_date ASC').all(Number(req.params.id)).map((t: any) => ({
+      ...t,
+      labels: t.labels ? JSON.parse(t.labels) : []
+    }));
+    res.json(topics);
+  } catch (err) {
+    console.error("GET /api/publishers/:id/topics error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
 });
 
 app.post('/api/topics', (req, res) => {
-  const { publisher_id, media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels } = req.body;
-  const stmt = db.prepare(`
-    INSERT INTO topics (publisher_id, media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  const info = stmt.run(publisher_id, media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels ? JSON.stringify(labels) : null);
-  res.json({ id: info.lastInsertRowid });
+  try {
+    const { publisher_id, media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels } = req.body;
+    const stmt = db.prepare(`
+      INSERT INTO topics (publisher_id, media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const info = stmt.run(
+      Number(publisher_id),
+      Number(media_title_id),
+      typeof media_name === 'string' ? media_name : null,
+      typeof title === 'string' ? title : null,
+      typeof description === 'string' ? description : null,
+      typeof publication_date === 'string' ? publication_date : null,
+      typeof deadline_date === 'string' ? deadline_date : null,
+      price !== undefined ? Number(price) : null,
+      typeof format === 'string' ? format : null,
+      typeof collaboration_type === 'string' ? collaboration_type : null,
+      typeof contact === 'string' ? contact : null,
+      typeof target_audience === 'string' ? target_audience : null,
+      reach !== undefined ? Number(reach) : null,
+      Array.isArray(labels) ? JSON.stringify(labels) : null
+    );
+    res.json({ id: info.lastInsertRowid });
+  } catch (err) {
+    console.error("POST /api/topics error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
 });
 
 app.put('/api/topics/:id', (req, res) => {
-  const { media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels } = req.body;
-  const stmt = db.prepare(`
-    UPDATE topics SET media_title_id = ?, media_name = ?, title = ?, description = ?, publication_date = ?, deadline_date = ?, price = ?, format = ?, collaboration_type = ?, contact = ?, target_audience = ?, reach = ?, labels = ?
-    WHERE id = ?
-  `);
-  stmt.run(media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels ? JSON.stringify(labels) : null, req.params.id);
-  res.json({ success: true });
+  try {
+    const { media_title_id, media_name, title, description, publication_date, deadline_date, price, format, collaboration_type, contact, target_audience, reach, labels } = req.body;
+    const stmt = db.prepare(`
+      UPDATE topics SET media_title_id = ?, media_name = ?, title = ?, description = ?, publication_date = ?, deadline_date = ?, price = ?, format = ?, collaboration_type = ?, contact = ?, target_audience = ?, reach = ?, labels = ?
+      WHERE id = ?
+    `);
+    stmt.run(
+      Number(media_title_id),
+      typeof media_name === 'string' ? media_name : null,
+      typeof title === 'string' ? title : null,
+      typeof description === 'string' ? description : null,
+      typeof publication_date === 'string' ? publication_date : null,
+      typeof deadline_date === 'string' ? deadline_date : null,
+      price !== undefined ? Number(price) : null,
+      typeof format === 'string' ? format : null,
+      typeof collaboration_type === 'string' ? collaboration_type : null,
+      typeof contact === 'string' ? contact : null,
+      typeof target_audience === 'string' ? target_audience : null,
+      reach !== undefined ? Number(reach) : null,
+      Array.isArray(labels) ? JSON.stringify(labels) : null,
+      Number(req.params.id)
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("PUT /api/topics/:id error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
 });
 
 app.delete('/api/topics/:id', (req, res) => {
-  db.prepare('DELETE FROM topics WHERE id = ?').run(req.params.id);
-  res.json({ success: true });
+  try {
+    db.prepare('DELETE FROM topics WHERE id = ?').run(Number(req.params.id));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/topics/:id error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
 });
 
 app.put('/api/users/:id', (req, res) => {
-  const { name } = req.body;
-  const stmt = db.prepare('UPDATE users SET name = ? WHERE id = ?');
-  stmt.run(name, req.params.id);
-  res.json({ success: true });
+  try {
+    const { name } = req.body;
+    if (typeof name !== 'string') return res.status(400).json({ error: 'Neplatný formát jména' });
+    const stmt = db.prepare('UPDATE users SET name = ? WHERE id = ?');
+    stmt.run(name, Number(req.params.id));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("PUT /api/users/:id error:", err);
+    res.status(500).json({ error: 'Chyba serveru' });
+  }
+});
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Unhandled Global Error:", err);
+  res.status(500).json({ error: 'Došlo k interní chybě serveru' });
 });
 
 // --- VITE MIDDLEWARE ---

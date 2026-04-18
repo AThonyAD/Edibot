@@ -2,6 +2,7 @@ import express from 'express';
 import Database from 'better-sqlite3';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import crypto from 'crypto';
 
 const app = express();
 app.use(express.json());
@@ -76,6 +77,11 @@ try {
   db.exec('ALTER TABLE topics ADD COLUMN labels TEXT');
 } catch (err) {}
 
+// Migration: Add token column to users if it doesn't exist
+try {
+  db.exec('ALTER TABLE users ADD COLUMN token TEXT');
+} catch (err) {}
+
 // Seed mock data
 const countUser = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
 if (countUser.count === 0) {
@@ -128,11 +134,35 @@ app.post('/api/auth/login', (req, res) => {
     if (user.is_active === 0) {
       return res.status(403).json({ error: 'Uživatelský účet je deaktivován' });
     }
+
+    // Generate simple token and save to DB
+    const token = crypto.randomBytes(32).toString('hex');
+    db.prepare('UPDATE users SET token = ? WHERE id = ?').run(token, user.id);
+    user.token = token;
+
     res.json({ user });
   } else {
     res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
   }
 });
+
+// Middleware for token authentication
+const requireAuth = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Chybí autorizační token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  const user = db.prepare('SELECT id, email, role, name FROM users WHERE token = ?').get(token) as any;
+
+  if (!user) {
+    return res.status(401).json({ error: 'Neplatný autorizační token' });
+  }
+
+  req.user = user;
+  next();
+};
 
 app.get('/api/media-titles', (req, res) => {
   const { publisher_id } = req.query;
@@ -174,9 +204,19 @@ app.delete('/api/media-titles/:id', (req, res) => {
   res.json({ success: true });
 });
 
-app.put('/api/media-titles/:id', (req, res) => {
+app.put('/api/media-titles/:id', requireAuth, (req: any, res: any) => {
   const { name, contact, default_price, default_reach, default_target_audience, default_collaboration_type } = req.body;
   const titleId = req.params.id;
+
+  // Verify ownership
+  const title = db.prepare('SELECT publisher_id FROM media_titles WHERE id = ?').get(titleId) as any;
+  if (!title) {
+    return res.status(404).json({ error: 'Titul nenalezen' });
+  }
+
+  if (title.publisher_id !== req.user.id && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Nemáte oprávnění upravovat tento titul' });
+  }
 
   try {
     const transaction = db.transaction(() => {

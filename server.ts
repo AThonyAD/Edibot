@@ -294,6 +294,15 @@ app.put('/api/users/:id', (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/stats', (req, res) => {
+  const topicsCount = db.prepare('SELECT COUNT(*) as count FROM topics').get() as { count: number };
+  const usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+  res.json({
+    topics: topicsCount.count,
+    users: usersCount.count
+  });
+});
+
 // --- VITE MIDDLEWARE ---
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

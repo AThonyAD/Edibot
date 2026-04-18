@@ -12,10 +12,9 @@ export default function AdminDashboard({ user }: { user: User }) {
   }, []);
 
   const fetchStats = async () => {
-    // In a real app, we'd have a specific stats endpoint
-    const res = await fetch('/api/topics');
-    const topics = await res.json();
-    setStats(prev => ({ ...prev, topics: topics.length }));
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    setStats({ topics: data.topics, users: data.users });
   };
 
   const fetchAllTopics = async () => {
@@ -61,7 +60,7 @@ export default function AdminDashboard({ user }: { user: User }) {
             </div>
             <div>
               <p className="text-sm text-slate-500 font-medium">Aktivní uživatelé</p>
-              <p className="text-2xl font-bold text-slate-900">5</p>
+              <p className="text-2xl font-bold text-slate-900">{stats.users}</p>
             </div>
           </div>
         </div>

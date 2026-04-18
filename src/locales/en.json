@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "EditorialPlans.com",
+    "role_publisher": "Publisher",
+    "role_client": "Client",
+    "role_admin": "Admin",
+    "logged_in_as": "Logged in as",
+    "logout": "Log out",
+    "language": "Language"
+  },
+  "login": {
+    "subtitle": "Media topics database for PR and advertising",
+    "email": "Email",
+    "email_placeholder": "publisher@test.com or client@test.com",
+    "password": "Password",
+    "password_placeholder": "password123",
+    "error_login": "Login failed",
+    "error_network": "Failed to connect to the server.",
+    "button_logging_in": "Logging in...",
+    "button_login": "Sign in",
+    "test_accounts_title": "Test accounts:",
+    "test_publishers": "Publishers",
+    "test_clients": "Clients",
+    "test_admin": "Admin"
+  }
+}

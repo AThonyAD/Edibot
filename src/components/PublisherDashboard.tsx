@@ -129,6 +129,7 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
   const handleEditTitle = (title: MediaTitle) => {
     setEditingTitleId(title.id);
     setEditingTitleData({ ...title });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleUpdateTitle = async (e: React.FormEvent) => {
@@ -760,7 +761,13 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
                         {topic.price.toLocaleString('cs-CZ')} Kč
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onClick={() => setIsEditing(topic)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                        <button 
+                          onClick={() => { 
+                            setIsEditing(topic); 
+                            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                          }} 
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => handleDelete(topic.id)} className="text-red-600 hover:text-red-900">

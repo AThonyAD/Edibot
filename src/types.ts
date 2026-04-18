@@ -3,6 +3,7 @@ export interface User {
   email: string;
   role: 'publisher' | 'client' | 'admin';
   name: string;
+  is_active?: boolean | number;
 }
 
 export interface MediaTitle {

@@ -66,6 +66,11 @@ try {
   db.exec('ALTER TABLE media_titles ADD COLUMN default_collaboration_type TEXT');
 } catch (err) {}
 
+// Migration: Add is_active column to users if it doesn't exist
+try {
+  db.exec('ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1');
+} catch (err) {}
+
 // Migration: Add labels column to topics if it doesn't exist
 try {
   db.exec('ALTER TABLE topics ADD COLUMN labels TEXT');
@@ -118,8 +123,11 @@ if (countUser.count === 0) {
 
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  const user = db.prepare('SELECT id, email, role, name FROM users WHERE email = ? AND password = ?').get(email, password);
+  const user = db.prepare('SELECT id, email, role, name, is_active FROM users WHERE email = ? AND password = ?').get(email, password) as any;
   if (user) {
+    if (user.is_active === 0) {
+      return res.status(403).json({ error: 'Uživatelský účet je deaktivován' });
+    }
     res.json({ user });
   } else {
     res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
@@ -291,6 +299,54 @@ app.put('/api/users/:id', (req, res) => {
   const { name } = req.body;
   const stmt = db.prepare('UPDATE users SET name = ? WHERE id = ?');
   stmt.run(name, req.params.id);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/stats', (req, res) => {
+  const usersCount = (db.prepare('SELECT COUNT(*) as c FROM users').get() as any).c;
+  const publishersCount = (db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'publisher'").get() as any).c;
+  const titlesCount = (db.prepare('SELECT COUNT(*) as c FROM media_titles').get() as any).c;
+  const topicsCount = (db.prepare('SELECT COUNT(*) as c FROM topics').get() as any).c;
+  
+  const publishers = db.prepare(`
+    SELECT u.id, u.name, 
+           (SELECT COUNT(*) FROM media_titles WHERE publisher_id = u.id) as titles_count,
+           (SELECT COUNT(*) FROM topics WHERE publisher_id = u.id) as topics_count
+    FROM users u
+    WHERE u.role = 'publisher'
+    ORDER BY u.name ASC
+  `).all();
+  
+  res.json({ usersCount, publishersCount, titlesCount, topicsCount, publishers });
+});
+
+app.get('/api/admin/titles', (req, res) => {
+  const titles = db.prepare(`
+    SELECT mt.id, mt.name, mt.contact, u.name as publisher_name,
+           (SELECT COUNT(*) FROM topics WHERE media_title_id = mt.id) as count_topics
+    FROM media_titles mt
+    LEFT JOIN users u ON mt.publisher_id = u.id
+    ORDER BY mt.name ASC
+  `).all();
+  res.json(titles);
+});
+
+app.get('/api/admin/users', (req, res) => {
+  const users = db.prepare('SELECT id, email, name, role, is_active FROM users ORDER BY id DESC').all();
+  res.json(users);
+});
+
+app.put('/api/admin/users/:id/toggle', (req, res) => {
+  db.prepare('UPDATE users SET is_active = CASE WHEN COALESCE(is_active, 1) = 1 THEN 0 ELSE 1 END WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/users/:id', (req, res) => {
+  db.transaction(() => {
+    db.prepare('DELETE FROM topics WHERE publisher_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM media_titles WHERE publisher_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  })();
   res.json({ success: true });
 });
 

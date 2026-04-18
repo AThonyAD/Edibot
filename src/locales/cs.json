@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "EdičníPlány.cz",
+    "role_publisher": "Vydavatel",
+    "role_client": "Klient",
+    "role_admin": "Administrátor",
+    "logged_in_as": "Přihlášen jako",
+    "logout": "Odhlásit",
+    "language": "Jazyk"
+  },
+  "login": {
+    "subtitle": "Databáze mediálních témat pro PR a inzerci",
+    "email": "E-mail",
+    "email_placeholder": "vydavatel@test.cz nebo klient@test.cz",
+    "password": "Heslo",
+    "password_placeholder": "heslo123",
+    "error_login": "Chyba přihlášení",
+    "error_network": "Nepodařilo se připojit k serveru.",
+    "button_logging_in": "Přihlašování...",
+    "button_login": "Přihlásit se",
+    "test_accounts_title": "Testovací účty:",
+    "test_publishers": "Vydavatelé",
+    "test_clients": "Klienti",
+    "test_admin": "Administrátor"
+  }
+}

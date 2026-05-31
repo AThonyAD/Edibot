@@ -138,14 +138,17 @@ app.get('/api/media-titles', (req, res) => {
   const { publisher_id } = req.query;
   console.log("GET /api/media-titles requested for publisher_id:", publisher_id);
   let query = `
-    SELECT mt.*, (SELECT COUNT(*) FROM topics t WHERE t.media_title_id = mt.id) as topic_count 
+    SELECT mt.*, COUNT(t.id) as topic_count
     FROM media_titles mt
+    LEFT JOIN topics t ON t.media_title_id = mt.id
   `;
-  const params: any[] = [];
+  const params: (string | number)[] = [];
   if (publisher_id) {
     query += ' WHERE mt.publisher_id = ?';
     params.push(Number(publisher_id));
   }
+  query += ' GROUP BY mt.id';
+
   const titles = db.prepare(query).all(...params);
   console.log(`Returning ${titles.length} titles`);
   res.json(titles);

@@ -310,9 +310,19 @@ app.get('/api/admin/stats', (req, res) => {
   
   const publishers = db.prepare(`
     SELECT u.id, u.name, 
-           (SELECT COUNT(*) FROM media_titles WHERE publisher_id = u.id) as titles_count,
-           (SELECT COUNT(*) FROM topics WHERE publisher_id = u.id) as topics_count
+           COALESCE(m.titles_count, 0) as titles_count,
+           COALESCE(t.topics_count, 0) as topics_count
     FROM users u
+    LEFT JOIN (
+      SELECT publisher_id, COUNT(*) as titles_count
+      FROM media_titles
+      GROUP BY publisher_id
+    ) m ON m.publisher_id = u.id
+    LEFT JOIN (
+      SELECT publisher_id, COUNT(*) as topics_count
+      FROM topics
+      GROUP BY publisher_id
+    ) t ON t.publisher_id = u.id
     WHERE u.role = 'publisher'
     ORDER BY u.name ASC
   `).all();

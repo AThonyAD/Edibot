@@ -75,8 +75,6 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
     if (!newTitleName.trim()) return;
     setError(null);
 
-    console.log("Adding title:", { name: newTitleName, publisher_id: user.id });
-
     try {
       const res = await fetch('/api/media-titles', {
         method: 'POST',

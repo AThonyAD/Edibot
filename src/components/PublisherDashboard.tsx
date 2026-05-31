@@ -56,11 +56,9 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
 
   const fetchMediaTitles = async () => {
     try {
-      console.log("Fetching media titles for publisher_id:", user.id);
       const res = await fetch(`/api/media-titles?publisher_id=${user.id}`);
       if (!res.ok) throw new Error('Failed to fetch titles');
       const data = await res.json();
-      console.log("Fetched titles:", data);
       setMediaTitles(data);
       return data;
     } catch (err) {
@@ -74,8 +72,6 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
     e.preventDefault();
     if (!newTitleName.trim()) return;
     setError(null);
-
-    console.log("Adding title:", { name: newTitleName, publisher_id: user.id });
 
     try {
       const res = await fetch('/api/media-titles', {
@@ -99,7 +95,6 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
       }
 
       const result = await res.json();
-      console.log("Title added successfully, ID:", result.id);
 
       setNewTitleName('');
       setNewTitleContact('');

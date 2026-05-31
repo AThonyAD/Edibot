@@ -3,7 +3,7 @@ import Database from 'better-sqlite3';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 
-const app = express();
+export const app = express();
 app.use(express.json());
 
 const db = new Database('database.sqlite');
@@ -380,4 +380,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}

@@ -153,7 +153,6 @@ app.get('/api/media-titles', (req, res) => {
 
 app.post('/api/media-titles', (req, res) => {
   const { publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type } = req.body;
-  console.log("POST /api/media-titles received:", { publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type });
   if (!publisher_id || !name) {
     console.warn("Missing publisher_id or name in request body");
     return res.status(400).json({ error: 'Chybí ID vydavatele nebo název titulu' });

@@ -852,17 +852,21 @@ function TopicForm({ user, topic, mediaTitles, selectedTitleId, onClose, onSaved
       return;
     }
 
-    const url = topic ? `/api/topics/${topic.id}` : '/api/topics';
-    const method = topic ? 'PUT' : 'POST';
+    try {
+      const url = topic ? `/api/topics/${topic.id}` : '/api/topics';
+      const method = topic ? 'PUT' : 'POST';
 
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(finalData),
-    });
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalData),
+      });
 
-    onSaved();
-    onClose();
+      onSaved();
+      onClose();
+    } catch (error) {
+      console.error('Error saving topic:', error);
+    }
   };
 
   return (

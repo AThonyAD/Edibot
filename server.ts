@@ -136,7 +136,6 @@ app.post('/api/auth/login', (req, res) => {
 
 app.get('/api/media-titles', (req, res) => {
   const { publisher_id } = req.query;
-  console.log("GET /api/media-titles requested for publisher_id:", publisher_id);
   let query = `
     SELECT mt.*, (SELECT COUNT(*) FROM topics t WHERE t.media_title_id = mt.id) as topic_count 
     FROM media_titles mt

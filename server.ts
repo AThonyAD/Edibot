@@ -1,6 +1,7 @@
 import express from 'express';
 import Database from 'better-sqlite3';
 import { createServer as createViteServer } from 'vite';
+import { hashPassword, verifyPassword } from './src/utils/auth.js';
 import path from 'path';
 
 const app = express();
@@ -79,12 +80,14 @@ try {
 // Seed mock data
 const countUser = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
 if (countUser.count === 0) {
+  const heslo123 = 'b969d68f3700d15a755c7be1f9237571:2dd4dcf7fe00afb36a66d4284bcc46d8273569e6d9640a71a44c4599082a3cf8acc970e26948b11e48bb5195da7c9db48f376eee0d03f080630e88ad64e1ec62';
+  const admin123 = 'c696fcbadba84500fb6ebfb83200411f:6097dc5162d53313fb73d7bee50a66d29c442c801adb8c7f2d3a4666021eef681d0f9e628ec4af0d56a6e118934358be4b4d213064c9481bbfaa65f6c1c81abc';
   db.exec(`
-    INSERT INTO users (email, password, role, name) VALUES ('vydavatel1@test.cz', 'heslo123', 'publisher', 'Tech Magazín');
-    INSERT INTO users (email, password, role, name) VALUES ('vydavatel2@test.cz', 'heslo123', 'publisher', 'Mafra');
-    INSERT INTO users (email, password, role, name) VALUES ('klient1@test.cz', 'heslo123', 'client', 'PR Agentura X');
-    INSERT INTO users (email, password, role, name) VALUES ('klient2@test.cz', 'heslo123', 'client', 'Marketing Pro');
-    INSERT INTO users (email, password, role, name) VALUES ('admin@test.cz', 'admin123', 'admin', 'Administrátor');
+    INSERT INTO users (email, password, role, name) VALUES ('vydavatel1@test.cz', '${heslo123}', 'publisher', 'Tech Magazín');
+    INSERT INTO users (email, password, role, name) VALUES ('vydavatel2@test.cz', '${heslo123}', 'publisher', 'Mafra');
+    INSERT INTO users (email, password, role, name) VALUES ('klient1@test.cz', '${heslo123}', 'client', 'PR Agentura X');
+    INSERT INTO users (email, password, role, name) VALUES ('klient2@test.cz', '${heslo123}', 'client', 'Marketing Pro');
+    INSERT INTO users (email, password, role, name) VALUES ('admin@test.cz', '${admin123}', 'admin', 'Administrátor');
     
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (1, 'Tech Magazín', 'redakce@techmagazin.cz');
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (1, 'IT Svět', 'info@itsvet.cz');
@@ -123,12 +126,19 @@ if (countUser.count === 0) {
 
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  const user = db.prepare('SELECT id, email, role, name, is_active FROM users WHERE email = ? AND password = ?').get(email, password) as any;
-  if (user) {
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Chybí e-mail nebo heslo' });
+  }
+
+  const user = db.prepare('SELECT id, email, role, name, is_active, password FROM users WHERE email = ?').get(email) as any;
+
+  if (user && verifyPassword(password, user.password)) {
     if (user.is_active === 0) {
       return res.status(403).json({ error: 'Uživatelský účet je deaktivován' });
     }
-    res.json({ user });
+    const { password: _password, ...userWithoutPassword } = user;
+    res.json({ user: userWithoutPassword });
   } else {
     res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
   }
@@ -373,6 +383,21 @@ async function startServer() {
     db.exec("UPDATE topics SET collaboration_type = 'Klasická inzerce' WHERE collaboration_type = 'Placené PR' OR collaboration_type = '' OR collaboration_type IS NULL");
   } catch (err) {
     console.error("Error updating existing collaboration types:", err);
+  }
+
+  // One-time password migration: convert plaintext to salt:hash format
+  try {
+    const users = db.prepare("SELECT id, password FROM users").all() as any[];
+    const updateStmt = db.prepare("UPDATE users SET password = ? WHERE id = ?");
+    db.transaction(() => {
+      for (const user of users) {
+        if (user.password && !user.password.includes(':')) {
+          updateStmt.run(hashPassword(user.password), user.id);
+        }
+      }
+    })();
+  } catch (err) {
+    console.error("Error migrating user passwords:", err);
   }
 
   app.listen(PORT, '0.0.0.0', () => {

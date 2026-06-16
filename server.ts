@@ -161,7 +161,6 @@ app.post('/api/media-titles', (req, res) => {
   try {
     const stmt = db.prepare('INSERT INTO media_titles (publisher_id, name, contact, default_price, default_reach, default_target_audience, default_collaboration_type) VALUES (?, ?, ?, ?, ?, ?, ?)');
     const info = stmt.run(Number(publisher_id), name, contact || '', default_price || 0, default_reach || 0, default_target_audience || '', default_collaboration_type || 'Klasická inzerce');
-    console.log("Title added to DB, ID:", info.lastInsertRowid);
     res.json({ id: info.lastInsertRowid });
   } catch (err) {
     console.error("Database error adding title:", err);

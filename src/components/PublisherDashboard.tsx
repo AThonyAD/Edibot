@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, useRef, ChangeEvent, FormEvent, useMemo } from 'react';
 import { User, Topic, MediaTitle } from '../types';
 import { Plus, Edit2, Trash2, Calendar, FileUp, Loader2, CheckCircle2, AlertCircle, Layout, Newspaper } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -24,6 +24,11 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
   const [extractedTopics, setExtractedTopics] = useState<Partial<Topic>[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredTopics = useMemo(() => {
+    if (!selectedTitle) return [];
+    return topics.filter(t => t.media_title_id === selectedTitle.id);
+  }, [topics, selectedTitle]);
 
   useEffect(() => {
     if (user?.id) {
@@ -712,7 +717,7 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
               <h3 className="font-bold text-slate-900">Seznam témat v titulu</h3>
-              <span className="text-sm text-slate-500">{topics.filter(t => t.media_title_id === selectedTitle.id).length} témat</span>
+              <span className="text-sm text-slate-500">{filteredTopics.length} témat</span>
             </div>
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
@@ -725,14 +730,14 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-200">
-                {topics.filter(t => t.media_title_id === selectedTitle.id).length === 0 ? (
+                {filteredTopics.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                       V tomto titulu zatím nejsou žádná témata.
                     </td>
                   </tr>
                 ) : (
-                  topics.filter(t => t.media_title_id === selectedTitle.id).map((topic) => (
+                  filteredTopics.map((topic) => (
                     <tr key={topic.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-medium text-slate-900">{topic.title}</div>

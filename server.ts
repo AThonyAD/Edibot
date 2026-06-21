@@ -2,11 +2,25 @@ import express from 'express';
 import Database from 'better-sqlite3';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import crypto from 'crypto';
 
 const app = express();
 app.use(express.json());
 
 const db = new Database('database.sqlite');
+
+// Password Hashing Utils
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, storedHash: string): boolean {
+  const [salt, hash] = storedHash.split(':');
+  const key = crypto.scryptSync(password, salt, 64).toString('hex');
+  return key === hash;
+}
 
 // Initialize Database
 db.exec(`
@@ -79,13 +93,18 @@ try {
 // Seed mock data
 const countUser = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
 if (countUser.count === 0) {
+  const insertUser = db.prepare('INSERT INTO users (email, password, role, name) VALUES (?, ?, ?, ?)');
+  // Pre-computed hashes for seed users
+  const HASH_HESLO123 = '785f7ba9101608c0a3edf7e3201cf5ea:2945379d529b7d69fae0dc3a2fcac0da565ed5e44740b5ce31c55ed86935cb5c0b396a6e6b4067e29b36097b9b039865aa4969e8c9a592041512d6d5ad530da9';
+  const HASH_ADMIN123 = '9723123d3a4e42b20e47373ac300f6b4:fa54ec1f70dbd1e2b19517da219ccc4149e7f1a10b428541ecbd098656c012575aaf54556894334982b1555fb5adb83012b7ce79790210c023b6eab379e8186f';
+
+  insertUser.run('vydavatel1@test.cz', HASH_HESLO123, 'publisher', 'Tech Magazín');
+  insertUser.run('vydavatel2@test.cz', HASH_HESLO123, 'publisher', 'Mafra');
+  insertUser.run('klient1@test.cz', HASH_HESLO123, 'client', 'PR Agentura X');
+  insertUser.run('klient2@test.cz', HASH_HESLO123, 'client', 'Marketing Pro');
+  insertUser.run('admin@test.cz', HASH_ADMIN123, 'admin', 'Administrátor');
+
   db.exec(`
-    INSERT INTO users (email, password, role, name) VALUES ('vydavatel1@test.cz', 'heslo123', 'publisher', 'Tech Magazín');
-    INSERT INTO users (email, password, role, name) VALUES ('vydavatel2@test.cz', 'heslo123', 'publisher', 'Mafra');
-    INSERT INTO users (email, password, role, name) VALUES ('klient1@test.cz', 'heslo123', 'client', 'PR Agentura X');
-    INSERT INTO users (email, password, role, name) VALUES ('klient2@test.cz', 'heslo123', 'client', 'Marketing Pro');
-    INSERT INTO users (email, password, role, name) VALUES ('admin@test.cz', 'admin123', 'admin', 'Administrátor');
-    
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (1, 'Tech Magazín', 'redakce@techmagazin.cz');
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (1, 'IT Svět', 'info@itsvet.cz');
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (2, 'Žena a život', 'lucie.hirschlerova@mafra.cz');
@@ -123,12 +142,14 @@ if (countUser.count === 0) {
 
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  const user = db.prepare('SELECT id, email, role, name, is_active FROM users WHERE email = ? AND password = ?').get(email, password) as any;
-  if (user) {
+  const user = db.prepare('SELECT id, email, password, role, name, is_active FROM users WHERE email = ?').get(email) as any;
+  if (user && verifyPassword(password, user.password)) {
     if (user.is_active === 0) {
       return res.status(403).json({ error: 'Uživatelský účet je deaktivován' });
     }
-    res.json({ user });
+    // Remove password from user object before sending response
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ user: userWithoutPassword });
   } else {
     res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
   }

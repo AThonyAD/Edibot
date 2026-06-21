@@ -60,7 +60,6 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
       const res = await fetch(`/api/media-titles?publisher_id=${user.id}`);
       if (!res.ok) throw new Error('Failed to fetch titles');
       const data = await res.json();
-      console.log("Fetched titles:", data);
       setMediaTitles(data);
       return data;
     } catch (err) {

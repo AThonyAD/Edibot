@@ -141,7 +141,7 @@ app.get('/api/media-titles', (req, res) => {
     SELECT mt.*, (SELECT COUNT(*) FROM topics t WHERE t.media_title_id = mt.id) as topic_count 
     FROM media_titles mt
   `;
-  const params: any[] = [];
+  const params: (string | number)[] = [];
   if (publisher_id) {
     query += ' WHERE mt.publisher_id = ?';
     params.push(Number(publisher_id));
@@ -208,7 +208,7 @@ app.put('/api/media-titles/:id', (req, res) => {
 app.get('/api/topics', (req, res) => {
   const { search, minPrice, maxPrice, format, collaboration_type, deadlineFrom, deadlineTo, media_title_id } = req.query;
   let query = 'SELECT * FROM topics WHERE 1=1';
-  const params: any[] = [];
+  const params: (string | number)[] = [];
 
   if (search) {
     const searchTerms = (search as string).split(/[,\s]+/).filter(Boolean);
@@ -234,23 +234,23 @@ app.get('/api/topics', (req, res) => {
   }
   if (format) {
     query += ' AND format = ?';
-    params.push(format);
+    params.push(format as string);
   }
   if (collaboration_type) {
     query += ' AND collaboration_type = ?';
-    params.push(collaboration_type);
+    params.push(collaboration_type as string);
   }
   if (deadlineFrom) {
     query += ' AND deadline_date >= ?';
-    params.push(deadlineFrom);
+    params.push(deadlineFrom as string);
   }
   if (deadlineTo) {
     query += ' AND deadline_date <= ?';
-    params.push(deadlineTo);
+    params.push(deadlineTo as string);
   }
   if (media_title_id) {
     query += ' AND media_title_id = ?';
-    params.push(media_title_id);
+    params.push(media_title_id as string);
   }
 
   query += ' ORDER BY deadline_date ASC';

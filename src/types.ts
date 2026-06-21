@@ -4,6 +4,7 @@ export interface User {
   role: 'publisher' | 'client' | 'admin';
   name: string;
   is_active?: boolean | number;
+  token?: string;
 }
 
 export interface MediaTitle {

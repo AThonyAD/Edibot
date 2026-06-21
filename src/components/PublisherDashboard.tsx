@@ -139,7 +139,10 @@ export default function PublisherDashboard({ user, onUserUpdate }: { user: User,
     try {
       const res = await fetch(`/api/media-titles/${editingTitleId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
         body: JSON.stringify(editingTitleData),
       });
 

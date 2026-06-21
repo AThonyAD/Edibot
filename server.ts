@@ -3,10 +3,10 @@ import Database from 'better-sqlite3';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 
-const app = express();
+export const app = express();
 app.use(express.json());
 
-const db = new Database('database.sqlite');
+export const db = new Database('database.sqlite');
 
 // Initialize Database
 db.exec(`
@@ -130,7 +130,7 @@ app.post('/api/auth/login', (req, res) => {
     }
     res.json({ user });
   } else {
-    res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
+    res.status(401).json({ error: 'Nesprávné jméno nebo heslo' });
   }
 });
 
@@ -380,4 +380,4 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.NODE_ENV !== "test") { startServer(); }

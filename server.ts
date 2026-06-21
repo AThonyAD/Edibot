@@ -147,7 +147,6 @@ app.get('/api/media-titles', (req, res) => {
     params.push(Number(publisher_id));
   }
   const titles = db.prepare(query).all(...params);
-  console.log(`Returning ${titles.length} titles`);
   res.json(titles);
 });
 

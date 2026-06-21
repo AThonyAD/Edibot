@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, useRef, useMemo, ChangeEvent, FormEvent } from 'react';
 import { User, Topic, MediaTitle } from '../types';
 import { Plus, Edit2, Trash2, Calendar, FileUp, Loader2, CheckCircle2, AlertCircle, Layout, Newspaper } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -804,6 +804,10 @@ function TopicForm({ user, topic, mediaTitles, selectedTitleId, onClose, onSaved
     labelsInput: topic?.labels ? topic.labels.join(', ') : '',
   });
 
+  const parsedLabels = useMemo(() => {
+    return formData.labelsInput.split(',').map(l => l.trim()).filter(Boolean);
+  }, [formData.labelsInput]);
+
   // Update form if topic changes (important for bulk extraction review)
   useEffect(() => {
     if (topic) {
@@ -841,7 +845,7 @@ function TopicForm({ user, topic, mediaTitles, selectedTitleId, onClose, onSaved
     const selectedTitle = mediaTitles.find(t => t.id === Number(formData.media_title_id));
     const finalData = {
       ...formData,
-      labels: formData.labelsInput.split(',').map(l => l.trim()).filter(Boolean),
+      labels: parsedLabels,
       media_title_id: selectedTitle?.id,
       media_name: selectedTitle?.name || user.name,
       publisher_id: user.id,
@@ -943,9 +947,9 @@ function TopicForm({ user, topic, mediaTitles, selectedTitleId, onClose, onSaved
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-slate-700 mb-1">Štítky (oddělené čárkou)</label>
             <input type="text" value={formData.labelsInput} onChange={e => setFormData({...formData, labelsInput: e.target.value})} className="w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="např. zdraví, sport, bio" />
-            {formData.labelsInput.split(',').map(l => l.trim()).filter(Boolean).length > 0 && (
+            {parsedLabels.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.labelsInput.split(',').map(l => l.trim()).filter(Boolean).map((label, idx) => (
+                {parsedLabels.map((label, idx) => (
                   <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
                     {label}
                   </span>

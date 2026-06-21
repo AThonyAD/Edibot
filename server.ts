@@ -2,6 +2,8 @@ import express from 'express';
 import Database from 'better-sqlite3';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import { hashPassword, verifyPassword } from './src/utils/auth.js';
+
 
 const app = express();
 app.use(express.json());
@@ -79,13 +81,14 @@ try {
 // Seed mock data
 const countUser = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
 if (countUser.count === 0) {
+  const insertUser = db.prepare('INSERT INTO users (email, password, role, name) VALUES (?, ?, ?, ?)');
+  insertUser.run('vydavatel1@test.cz', hashPassword('heslo123'), 'publisher', 'Tech Magazín');
+  insertUser.run('vydavatel2@test.cz', hashPassword('heslo123'), 'publisher', 'Mafra');
+  insertUser.run('klient1@test.cz', hashPassword('heslo123'), 'client', 'PR Agentura X');
+  insertUser.run('klient2@test.cz', hashPassword('heslo123'), 'client', 'Marketing Pro');
+  insertUser.run('admin@test.cz', hashPassword('admin123'), 'admin', 'Administrátor');
+
   db.exec(`
-    INSERT INTO users (email, password, role, name) VALUES ('vydavatel1@test.cz', 'heslo123', 'publisher', 'Tech Magazín');
-    INSERT INTO users (email, password, role, name) VALUES ('vydavatel2@test.cz', 'heslo123', 'publisher', 'Mafra');
-    INSERT INTO users (email, password, role, name) VALUES ('klient1@test.cz', 'heslo123', 'client', 'PR Agentura X');
-    INSERT INTO users (email, password, role, name) VALUES ('klient2@test.cz', 'heslo123', 'client', 'Marketing Pro');
-    INSERT INTO users (email, password, role, name) VALUES ('admin@test.cz', 'admin123', 'admin', 'Administrátor');
-    
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (1, 'Tech Magazín', 'redakce@techmagazin.cz');
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (1, 'IT Svět', 'info@itsvet.cz');
     INSERT INTO media_titles (publisher_id, name, contact) VALUES (2, 'Žena a život', 'lucie.hirschlerova@mafra.cz');
@@ -119,15 +122,37 @@ if (countUser.count === 0) {
   `);
 }
 
+// Password Migration: Convert plain text passwords to salt:hash format asynchronously to not block event loop
+(async () => {
+  try {
+    const allUsers = db.prepare('SELECT id, password FROM users').all() as any[];
+    for (const user of allUsers) {
+      if (user.password && !user.password.includes(':')) {
+        // Yield to event loop to avoid blocking during scryptSync
+        await new Promise(resolve => setImmediate(resolve));
+        const hashedPassword = hashPassword(user.password);
+        db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashedPassword, user.id);
+      }
+    }
+  } catch (err) {
+    console.error('Password migration error:', err);
+  }
+})();
+
+
 // --- API ROUTES ---
 
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  const user = db.prepare('SELECT id, email, role, name, is_active FROM users WHERE email = ? AND password = ?').get(email, password) as any;
-  if (user) {
+  if (!email || !password) {
+    return res.status(401).json({ error: 'Neplatné přihlašovací údaje' });
+  }
+  const user = db.prepare('SELECT id, email, password as storedPassword, role, name, is_active FROM users WHERE email = ?').get(email) as any;
+  if (user && verifyPassword(password, user.storedPassword)) {
     if (user.is_active === 0) {
       return res.status(403).json({ error: 'Uživatelský účet je deaktivován' });
     }
+    delete user.storedPassword;
     res.json({ user });
   } else {
     res.status(401).json({ error: 'Neplatné přihlašovací údaje' });

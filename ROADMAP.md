@@ -1,28 +1,30 @@
-# Edibot Roadmap
+# EdiBot — roadmapa datového produktu
 
-Stav k 2026-06-07.
+Stav k 2026-11-04. Aktuální základ: **Data MVP 2.0.0**.
 
-## Dalsi ukoly
+## Dokončeno v MVP 2.0
 
-1. Detail prilezitosti
-   - Klik na prilezitost otevre detail s popisem, terminy, uzaverkami, cenou, kontaktem, webem, stitky a navazanymi balicky.
+- Schválené zaměření na tisková ediční témata, bez hodnocení, online inventáře a ceníkového produktu.
+- Přenosný model médium/vydání/téma, jeden termín vydání a dvě inzertní uzávěrky.
+- Vydavatelské profily, oddělené náklady a přibližná celostrana bez DPH v CZK.
+- IPTC Media Topics s původem, verzí a stavem přiřazení.
+- Referenční pilot Echo/Hrot: 37 vydání/příloh, 47 témat, stránkové doklady.
+- JSON schémata, kontrola vazeb, CSV šablona, převod do kandidátního podání a regresní testy.
+- Dokumentace, dvě ADR a zachovaný archiv předchozí roadmapy.
 
-2. Event + balicky
-   - Pohodlne zalozeni hlavniho eventu a vice balicku najednou, napriklad Patron, Partner, VIP stul, branding nebo Pro-Am.
+## Následující kroky
 
-3. Klientsky pohled
-   - Upravit klientskou cast tak, aby byla postavena na opportunities, ne na starych tematech.
-   - Filtrovat podle typu, kanalu, kategorie, terminu, ceny a stitku.
+1. Dokončit věcnou kurátorskou revizi IPTC a řešení dvou obsahově neurčitých Echo speciálů.
+2. Zavést skutečný příjem a ukládání originálních podkladů od prvních vydavatelů.
+3. Ověřit opakovanou aktualizaci plánu, stabilní identifikátory a postup při zrušení tématu.
+4. Přidat XLSX a návrhy extrakce PDF/e-mailů při zachování kontroly a zdrojů.
+5. Podle poptávky nabídnout vydavatelům implementaci a údržbu JSON exportu; XML/NewsML-G2 podle konkrétního partnera.
+6. Výběrově doplnit skutečné sponzorské nabídky fyzických akcí.
 
-4. Tematicke hledani
-   - Uzivatel zada, co chce komunikovat, napriklad vitaminy, imunita nebo doplnky stravy.
-   - Aplikace vrati relevantni nabidky, ne hotovy mediaplan.
+Detail a ověřitelné výsledky: [datový backlog](docs/data-mvp-backlog.md).
 
-5. Admin sprava organizaci
-   - Dodelat upravu udaju organizace: nazev, typ, web, kontakt a pripadne deaktivace.
+## Mimo současný rozsah
 
-6. Prejmenovani a sjednoceni UI
-   - Postupne odstranit zbytky stareho nazvu EdicniPlany.cz a stare logiky titul/tema tam, kde uz Edibot resi sirsi prilezitosti.
+Rozvoj aplikace, UI, hosting, obecné tržiště příležitostí, eventové balíčky jako hlavní produkt, automatické hodnocení a placená výzkumná data.
 
-7. Hosting priprava
-   - Pripravit jednoduchy produkcni rezim: SQLite soubor, zalohy databaze, env promenne, start script a minimalni deployment na levny hosting nebo VPS.
+Původní roadmapa z 2026-06-07 je beze změny zachována v [archivu](docs/archive/ROADMAP-2026-06-07.md).

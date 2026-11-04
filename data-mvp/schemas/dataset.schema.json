@@ -1,0 +1,2249 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "2.0.0"
+      ]
+    },
+    "dataset_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "dataset_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date",
+      "description": "Den sestavení a posouzení tohoto datasetu."
+    },
+    "scope": {
+      "enum": [
+        "reference_pilot",
+        "curated_dataset"
+      ],
+      "description": "Výslovně přiznaný rozsah dat či slovníku."
+    },
+    "market": {
+      "enum": [
+        "CZ"
+      ]
+    },
+    "price_convention": {
+      "enum": [
+        "standard_full_page_net"
+      ],
+      "description": "Jednotná konvence české sady: standardní 1/1 bez DPH."
+    },
+    "taxonomy": {
+      "type": "object",
+      "properties": {
+        "scheme": {
+          "enum": [
+            "IPTC Media Topics"
+          ]
+        },
+        "release": {
+          "type": "string",
+          "format": "date"
+        },
+        "scope": {
+          "enum": [
+            "referenced_concepts_and_ancestors",
+            "complete"
+          ],
+          "description": "Výslovně přiznaný rozsah dat či slovníku."
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Odkaz na konkrétní verzi zdroje."
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "license": {
+          "enum": [
+            "CC-BY-4.0"
+          ]
+        },
+        "attribution": {
+          "type": "string",
+          "minLength": 1
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/concept"
+          }
+        }
+      },
+      "required": [
+        "scheme",
+        "release",
+        "scope",
+        "source_id",
+        "source_url",
+        "license",
+        "attribution",
+        "concepts"
+      ],
+      "additionalProperties": false
+    },
+    "publishers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/publisher"
+      }
+    },
+    "media_titles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/media_title"
+      }
+    },
+    "audience_profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/audience_profile"
+      }
+    },
+    "editions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edition"
+      }
+    },
+    "editorial_topics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/editorial_topic"
+      }
+    },
+    "page_price_estimates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/page_price_estimate"
+      }
+    },
+    "circulation_observations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/circulation_observation"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/change"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "sponsorship_offers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sponsorship_offer"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "dataset_version",
+    "as_of",
+    "scope",
+    "market",
+    "price_convention",
+    "taxonomy",
+    "publishers",
+    "media_titles",
+    "audience_profiles",
+    "editions",
+    "editorial_topics",
+    "page_price_estimates",
+    "circulation_observations",
+    "sources",
+    "evidence",
+    "changes",
+    "events",
+    "sponsorship_offers"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:edibot:schema:dataset:2.0.0",
+  "title": "EdiBot data MVP 2.0.0 — Czech print editorial plans",
+  "$defs": {
+    "temporal": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "precision": {
+          "enum": [
+            "day",
+            "month",
+            "year",
+            "range"
+          ]
+        },
+        "text_raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normalization": {
+          "enum": [
+            "explicit",
+            "year_from_document",
+            "period_from_label",
+            "context_interpreted",
+            "calculated"
+          ]
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "precision",
+        "text_raw",
+        "normalization"
+      ],
+      "additionalProperties": false
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "email"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        }
+      },
+      "required": [
+        "name",
+        "role",
+        "email",
+        "phone",
+        "evidence_ids"
+      ],
+      "additionalProperties": false
+    },
+    "assignment": {
+      "type": "object",
+      "properties": {
+        "concept_uri": {
+          "type": "string",
+          "pattern": "^http://cv\\.iptc\\.org/newscodes/mediatopic/[0-9]{8}$",
+          "description": "Stabilní identifikátor pojmu IPTC Media Topics."
+        },
+        "taxonomy_release": {
+          "type": "string",
+          "format": "date",
+          "description": "Použitá verze slovníku IPTC."
+        },
+        "assignment_origin": {
+          "enum": [
+            "publisher",
+            "curator",
+            "automated"
+          ],
+          "description": "Kdo klasifikaci přiřadil; publisher, curator nebo automated."
+        },
+        "assignment_status": {
+          "enum": [
+            "proposed",
+            "reviewed"
+          ],
+          "description": "Návrh nebo zkontrolované přiřazení; bez číselného hodnocení."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        }
+      },
+      "required": [
+        "concept_uri",
+        "taxonomy_release",
+        "assignment_origin",
+        "assignment_status",
+        "evidence_ids"
+      ],
+      "additionalProperties": false
+    },
+    "publisher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "legal_name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registration_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "website": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "name",
+        "legal_name",
+        "registration_number",
+        "website",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "media_title": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložený vydavatel; obchodní zastoupení se za něj automaticky nepovažuje."
+        },
+        "parent_media_title_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title_type": {
+          "enum": [
+            "newspaper",
+            "magazine",
+            "supplement"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "minLength": 2
+        },
+        "country": {
+          "enum": [
+            "CZ"
+          ]
+        },
+        "editorial_focus_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "editorial_focus_summary": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frequency_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issues_per_year": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "distribution_notes_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sales_representation_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contact"
+          }
+        },
+        "cooperation_notes_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložené možnosti či omezení; inzerovatelnost nabídnutých témat se předpokládá."
+        },
+        "materials_delivery_rule_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložené obecné pravidlo dodání podkladů, bez automatického dopočtu."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "name",
+        "publisher_id",
+        "parent_media_title_id",
+        "title_type",
+        "language",
+        "country",
+        "editorial_focus_raw",
+        "editorial_focus_summary",
+        "frequency_raw",
+        "issues_per_year",
+        "distribution_notes_raw",
+        "sales_representation_raw",
+        "contacts",
+        "cooperation_notes_raw",
+        "materials_delivery_rule_raw"
+      ],
+      "additionalProperties": false
+    },
+    "audience_profile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "media_title_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Vazba na konkrétní tištěné médium."
+        },
+        "profile_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary_cs": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Věrná kurátorská parafráze doloženého obsahu."
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "industries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "interests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "age_min": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "age_max": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "demographic_notes_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "geographic_notes_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "claim_origin": {
+          "enum": [
+            "publisher_declared"
+          ],
+          "description": "Původ tvrzení o publiku; nyní pouze deklarace vydavatele."
+        },
+        "reference_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Období, ke kterému se údaj vztahuje, pokud je doloženo."
+        },
+        "measurement_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Skutečné období měření, pokud je uvedeno; není totožné s rokem mediakitu."
+        },
+        "methodology_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Metodika uvedená vydavatelem, jinak neznámá."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "media_title_id",
+        "profile_raw",
+        "summary_cs",
+        "roles",
+        "industries",
+        "interests",
+        "age_min",
+        "age_max",
+        "demographic_notes_raw",
+        "geographic_notes_raw",
+        "claim_origin",
+        "reference_period",
+        "measurement_period",
+        "methodology_raw"
+      ],
+      "additionalProperties": false
+    },
+    "edition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "media_title_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Vazba na konkrétní tištěné médium."
+        },
+        "parent_edition_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložené mateřské vydání přílohy."
+        },
+        "edition_type": {
+          "enum": [
+            "regular_issue",
+            "supplement",
+            "special",
+            "unspecified"
+          ]
+        },
+        "edition_label_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issue_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Původní název podle zdroje."
+        },
+        "coverage_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Období označující vydání, nikoli další den publikace."
+        },
+        "publication_date": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Jediný termín vydání dodaný vydavatelem, včetně označení V prodeji od."
+        },
+        "booking_deadline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Uzávěrka příjmu inzerce."
+        },
+        "materials_deadline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Uzávěrka dodání inzertních podkladů."
+        },
+        "edition_status": {
+          "enum": [
+            "planned",
+            "cancelled",
+            "published",
+            "unknown"
+          ],
+          "description": "Stav podle podkladu; minulý termín neprokazuje vydání."
+        },
+        "cooperation_notes_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložené možnosti či omezení; inzerovatelnost nabídnutých témat se předpokládá."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "media_title_id",
+        "parent_edition_id",
+        "edition_type",
+        "edition_label_raw",
+        "issue_number",
+        "title_raw",
+        "coverage_period",
+        "publication_date",
+        "booking_deadline",
+        "materials_deadline",
+        "edition_status",
+        "cooperation_notes_raw"
+      ],
+      "additionalProperties": false
+    },
+    "editorial_topic": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "media_title_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Vazba na konkrétní tištěné médium."
+        },
+        "edition_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Vazba na konkrétní vydání, může být neznámá."
+        },
+        "parent_topic_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Nadřazené téma stejného média a vydání."
+        },
+        "title_raw": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Původní název podle zdroje."
+        },
+        "description_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Původní popis, pokud je převzat; ne kurátorský výmysl."
+        },
+        "summary_cs": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Věrná kurátorská parafráze doloženého obsahu."
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "description": "Kurátorská klíčová slova, nikoli skóre."
+        },
+        "planning_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Období plánovaného tématu bez konkrétního vydání."
+        },
+        "editorial_status": {
+          "enum": [
+            "planned",
+            "cancelled",
+            "published",
+            "unknown"
+          ],
+          "description": "Stav plánovaného tématu, nepřepočítává se podle aktuálního dne."
+        },
+        "classification_status": {
+          "enum": [
+            "pending",
+            "reviewed",
+            "reviewed_unmapped"
+          ],
+          "description": "Rozpracovaná, zkontrolovaná nebo zkontrolovaná bez obhajitelného kódu."
+        },
+        "iptc_assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assignment"
+          },
+          "description": "Přiřazení pojmů IPTC; nejsou hodnocením účinnosti."
+        },
+        "cooperation_notes_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložené možnosti či omezení; inzerovatelnost nabídnutých témat se předpokládá."
+        },
+        "booking_deadline_override": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Výslovný odlišný termín tématu; null znamená použít termín vydání, je-li známý."
+        },
+        "materials_deadline_override": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Výslovný odlišný termín podkladů pro téma; jinak použít vydání."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "media_title_id",
+        "edition_id",
+        "parent_topic_id",
+        "title_raw",
+        "description_raw",
+        "summary_cs",
+        "keywords",
+        "planning_period",
+        "editorial_status",
+        "classification_status",
+        "iptc_assignments",
+        "cooperation_notes_raw",
+        "booking_deadline_override",
+        "materials_deadline_override"
+      ],
+      "additionalProperties": false
+    },
+    "page_price_estimate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "media_title_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Vazba na konkrétní tištěné médium."
+        },
+        "edition_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Vazba na konkrétní vydání, může být neznámá."
+        },
+        "approx_page_price_net": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Přibližná cena standardní inzertní celostrany bez DPH."
+        },
+        "currency": {
+          "enum": [
+            "CZK"
+          ]
+        },
+        "estimate_basis": {
+          "enum": [
+            "publisher_estimate",
+            "publisher_rate_rounded"
+          ],
+          "description": "Způsob získání odhadu; zaokrouhlení základní celostrany nebo odhad vydavatele."
+        },
+        "reference_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Období, ke kterému se údaj vztahuje, pokud je doloženo."
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "media_title_id",
+        "edition_id",
+        "approx_page_price_net",
+        "currency",
+        "estimate_basis",
+        "reference_period",
+        "note"
+      ],
+      "additionalProperties": false
+    },
+    "circulation_observation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "media_title_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Vazba na konkrétní tištěné médium."
+        },
+        "metric": {
+          "enum": [
+            "printed_copies",
+            "sold_copies",
+            "sold_plus_subscriptions",
+            "controlled_distribution"
+          ]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Doložená hodnota; nula není chybějící údaj."
+        },
+        "reference_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Období, ke kterému se údaj vztahuje, pokud je doloženo."
+        },
+        "source_origin": {
+          "enum": [
+            "publisher",
+            "abc"
+          ],
+          "description": "Původ údaje o nákladu; publisher a ABC se odlišují."
+        },
+        "audit_status": {
+          "enum": [
+            "audited",
+            "not_yet_audited",
+            "unspecified"
+          ],
+          "description": "Skutečně doložený stav ověření nákladu."
+        },
+        "label_raw": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "media_title_id",
+        "metric",
+        "value",
+        "reference_period",
+        "source_origin",
+        "audit_status",
+        "label_raw"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "source_type": {
+          "enum": [
+            "pdf",
+            "spreadsheet",
+            "document",
+            "email",
+            "web",
+            "publisher_confirmation",
+            "csv"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_source_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "originator_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "document_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum zdroje, pokud je doloženo."
+        },
+        "received_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Den přijetí podkladu, pokud je známý."
+        },
+        "reference_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Období, ke kterému se údaj vztahuje, pokud je doloženo."
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Kontrolní součet přesné verze souboru."
+        },
+        "page_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "access_level": {
+          "enum": [
+            "public",
+            "internal",
+            "restricted"
+          ],
+          "description": "Přístupnost originálního podkladu, nikoli jeho metadat."
+        },
+        "redistribution_note": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Doložené podmínky dalšího použití; null neznamená udělený souhlas."
+        }
+      },
+      "required": [
+        "id",
+        "source_type",
+        "title",
+        "filename",
+        "url",
+        "parent_source_id",
+        "originator_raw",
+        "document_date",
+        "received_on",
+        "reference_period",
+        "sha256",
+        "page_count",
+        "access_level",
+        "redistribution_note"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Odkaz na konkrétní verzi zdroje."
+        },
+        "collection": {
+          "enum": [
+            "publishers",
+            "media_titles",
+            "audience_profiles",
+            "editions",
+            "editorial_topics",
+            "page_price_estimates",
+            "circulation_observations",
+            "sources",
+            "events",
+            "sponsorship_offers"
+          ],
+          "description": "Kolekce cílového záznamu."
+        },
+        "record_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Odkaz na podporovaný nebo změněný záznam."
+        },
+        "field_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "JSON Pointer cesty k polím podporovaného záznamu."
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Pořadí stránky PDF od 1; u webu může chybět."
+        },
+        "locator": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_text": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Původní krátký úsek zdroje pro kontrolu; parafráze patří do interpretation_note."
+        },
+        "interpretation_note": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Vysvětlení normalizace, parafráze nebo kontextové interpretace."
+        },
+        "value_origin": {
+          "enum": [
+            "stated",
+            "normalized",
+            "curator_assigned",
+            "context_interpreted",
+            "calculated"
+          ],
+          "description": "Rozlišení doslovného převzetí, normalizace, kurátorského přiřazení a výpočtu."
+        },
+        "verification_method": {
+          "enum": [
+            "source_checked",
+            "publisher_confirmed"
+          ],
+          "description": "Kontrola podkladu není automaticky nové potvrzení vydavatelem."
+        },
+        "checked_on": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "id",
+        "source_id",
+        "collection",
+        "record_id",
+        "field_paths",
+        "page",
+        "locator",
+        "source_text",
+        "interpretation_note",
+        "value_origin",
+        "verification_method",
+        "checked_on"
+      ],
+      "additionalProperties": false
+    },
+    "change": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "collection": {
+          "enum": [
+            "publishers",
+            "media_titles",
+            "audience_profiles",
+            "editions",
+            "editorial_topics",
+            "page_price_estimates",
+            "circulation_observations",
+            "sources",
+            "evidence",
+            "events",
+            "sponsorship_offers"
+          ],
+          "description": "Kolekce cílového záznamu."
+        },
+        "record_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Odkaz na podporovaný nebo změněný záznam."
+        },
+        "field_path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "old_value": {
+          "description": "Hodnota před doloženou změnou."
+        },
+        "new_value": {
+          "description": "Hodnota po doložené změně."
+        },
+        "changed_on": {
+          "type": "string",
+          "format": "date"
+        },
+        "changed_by": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifikace kurátora či procesu provádějícího změnu."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Důvod změny."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        }
+      },
+      "required": [
+        "id",
+        "collection",
+        "record_id",
+        "field_path",
+        "old_value",
+        "new_value",
+        "changed_on",
+        "changed_by",
+        "reason",
+        "evidence_ids"
+      ],
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organizer_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Původní popis, pokud je převzat; ne kurátorský výmysl."
+        },
+        "location_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event_period": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iptc_assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assignment"
+          },
+          "description": "Přiřazení pojmů IPTC; nejsou hodnocením účinnosti."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "name",
+        "organizer_raw",
+        "description_raw",
+        "location_raw",
+        "event_period",
+        "iptc_assignments"
+      ],
+      "additionalProperties": false
+    },
+    "sponsorship_offer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$",
+          "description": "Stabilní identifikátor záznamu; nemění se se změnou názvu či data."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Verze daného záznamu."
+        },
+        "curation_status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "needs_review",
+            "superseded"
+          ],
+          "description": "Stav datové kontroly, nikoli hodnocení média."
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum založení záznamu v EdiBotu."
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Datum poslední změny záznamu."
+        },
+        "last_checked_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Datum poslední kontroly vůči uvedeným zdrojům."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+          },
+          "uniqueItems": true,
+          "description": "Odkazy na doklady pro tento záznam."
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+        },
+        "description_raw": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Původní popis, pokud je převzat; ne kurátorský výmysl."
+        },
+        "deliverables_raw": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "booking_deadline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/temporal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Uzávěrka příjmu inzerce."
+        },
+        "contact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/contact"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "curation_status",
+        "created_on",
+        "updated_on",
+        "last_checked_on",
+        "evidence_ids",
+        "event_id",
+        "description_raw",
+        "deliverables_raw",
+        "booking_deadline",
+        "contact"
+      ],
+      "additionalProperties": false
+    },
+    "concept": {
+      "type": "object",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "pattern": "^http://cv\\.iptc\\.org/newscodes/mediatopic/[0-9]{8}$"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[0-9]{8}$"
+        },
+        "label_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_uri": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retired": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uri",
+        "code",
+        "label_en",
+        "parent_uri",
+        "retired"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "1.0.0"
+      ]
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "received_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "export_scope": {
+      "enum": [
+        "full_plan",
+        "partial_update"
+      ]
+    },
+    "reference_year": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2200
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "medium": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edition": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publication_date": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/temporal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "booking_deadline": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/temporal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "materials_deadline": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/temporal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publisher_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publisher_edition_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "cancelled",
+              "unknown"
+            ]
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "medium",
+          "edition",
+          "topic",
+          "description",
+          "publication_date",
+          "booking_deadline",
+          "materials_deadline",
+          "publisher_item_id",
+          "publisher_edition_id",
+          "status",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_name",
+    "source_id",
+    "received_on",
+    "export_scope",
+    "reference_year",
+    "rows"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:edibot:schema:publisher-submission:1.0.0",
+  "$defs": {
+    "temporal": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "precision": {
+          "enum": [
+            "day",
+            "month",
+            "year",
+            "range"
+          ]
+        },
+        "text_raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normalization": {
+          "enum": [
+            "explicit",
+            "year_from_document",
+            "period_from_label",
+            "context_interpreted",
+            "calculated"
+          ]
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "precision",
+        "text_raw",
+        "normalization"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "title": "Publisher submission — minimal intake format, not canonical EdiBot dataset",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "export_scope": {
+            "const": "full_plan"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reference_year": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  ]
+}

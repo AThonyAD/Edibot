@@ -1,0 +1,8 @@
+/data-mvp/** text eol=lf
+/data-mvp/**/*.csv -text whitespace=cr-at-eol
+/docs/** text eol=lf
+/docs/archive/** -text whitespace=cr-at-eol
+/.github/workflows/data-mvp.yml text eol=lf
+/README.md text eol=lf
+/ROADMAP.md text eol=lf
+/.gitattributes text eol=lf
